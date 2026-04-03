@@ -1,0 +1,85 @@
+
+\section{Model Selection}
+\subsection{General Framework}
+
+True Model (General): $y_i = f(X_i) + \varepsilon_i, \quad \mathbb{E}[\varepsilon]=0, \text{Cov}(\varepsilon)=\sigma^2 I$.
+
+We want to find "the best" approximately fitted linear model $M \subseteq \{1, \dots, p\}$ encoding selected covariates in design matrix $X^M$.
+"Best" is defined as minimal SMSE):
+
+$n^{-1} \text{SMSE} = n^{-1} \sum_{i=1}^n \mathbb{E}\left[ (\hat{Y}_i^M - f(x_i))^2 \right]$
+
+\subsubsection*{Case 1: True model is Linear ($Y = X\beta + \varepsilon$)}
+\begin{itemize}
+    \item Full True Model ($M_{full}$) (also if we have parameters from full true model ($M_{full}$) plus some additional irrelevant variables): Unbiased.
+    
+    $\mathbb{E} \left[ \frac{1}{n} \|\hat{Y} - X\beta\|_2^2 \right] = \mathbb{E} \left[ \frac{1}{n} \|X\hat{\beta} - X\beta\|_2^2 \right] = \frac{1}{n} \sum_{i=1}^n \mathbb{E} \left[ \left( x_i^T (\hat{\beta} - \beta) \right)^2 \right]$ (Using  $\mathbb{E}[U^2] = \text{Var}(U) + (\mathbb{E}[U])^2$) $= \frac{1}{n} \sum_{i=1}^n \text{Var} \left( x_i^T \hat{\beta} \right) = \frac{1}{n} \sum_{i=1}^n x_i^T \text{Var}(\hat{\beta}) x_i = \frac{1}{n} \sum_{i=1}^n x_i^T \left( \sigma^2 (X^T X)^{-1} \right) x_i = \frac{\sigma^2}{n} \sum_{i=1}^n \underbrace{x_i^T (X^T X)^{-1} x_i}_{P_{ii}} = \frac{\sigma^2}{n} \text{trace}(P) = \sigma^2 \frac{p}{n}$
+    
+    $\implies$ Error increases linearly with dimensionality $p$ (variance accumulation).
+    
+    \item Smaller Model ($|M|=q$):
+    
+    $\frac{1}{n}\mathbb{E}[\|\hat{Y}^M - X\beta\|_2^2] = \underbrace{n^{-1} \sum_{i=1}^n (\mathbb{E}[(X_i^M)^\top \hat{\beta}^M] - X_i^\top \beta)^2}_{\text{Bias}^2} + \underbrace{\sigma^2 \frac{q}{n}}_{\text{Variance}}$
+    
+    $\implies$ A smaller, wrong (biased) model may be better by trading Bias$^2$ against Variance.
+\end{itemize}
+
+\subsubsection*{Case 2: True model is Non-Linear}
+
+$\underbrace{n^{-1} \sum_{i=1}^n (\mathbb{E}[(X_i^M)^\top \hat{\beta}^M] - f(X_i))^2}_{\text{Bias}^2} + \underbrace{\sigma^2 \frac{|M|}{n}}_{\text{Variance}}$
+
+for heteroscedastic and uncorrelated errors: $ n^{-1} \sum_{i=1}^{n} \mathrm{Var}(\hat{Y}_{i}^{M}) = n^{-1} \sum_{i=1}^{n} \sigma_{i}^{2} (P_{M})_{ii}, $
+
+$\implies$ Perform optimal bias-variance trade-off in a data-driven way.
+
+$\implies$ We can always decompose "MSE" in Var and Bias
+
+\subsection{Stepwise Regression}
+Not minimizing SMSE explicitly.
+\begin{itemize}
+    \item Forward: Start empty. Add most significant covariate (t-test)(Greedy $\to$ Fast) until no variable is significant.
+    \item Backward: Start full. Drop least significant covariate (t-test) until all are significant.
+\end{itemize}
+Issues:
+\begin{itemize}
+    \item p-values do not control Type 1 error because we optimized over them (post-selection inference problem (data leakage))
+    \item Multiple testing problem.
+    \item If variables are highly correlated: No guarantee that all covariates in $\hat{M}$ are truly significant.
+\end{itemize}
+
+\subsection{Model Selection Criteria}
+Aim: Find $M \subseteq \{1, \dots, p\}$ minimizing $n^{-1}\text{SMSE(M)} = n^{-1}\sum \mathbb{E}[(\hat{Y}_i^M - \mu_i)^2] , \quad \text{where } \mu = \mathbb{E}[Y]$.
+\\ Equivalent to minimizing $\Gamma_p(M) = \frac{\text{SMSE}(M)}{\sigma^2}$.
+
+\subsubsection{Mallows' $C_p$ Statistic}
+Estimator for $\Gamma_p(M)$:
+$C_p := \hat{\Gamma}_p(M) = \frac{\|Y - \hat{Y}^M\|_2^2}{\hat{\sigma}_p^2} + 2|M| - n$
+
+Where $\hat{\sigma}_p^2$ is the error variance estimated from the full model:
+$\hat{\sigma}_p^2 = \frac{\|Y - \hat{Y}\|_2^2}{n-p}$
+
+Properties:
+\begin{itemize}
+    \item $\mathbb{E}[\hat{\Gamma}_p(M)] \approx \Gamma_p(M)$.
+    \item If $M$ is correct (unbiased, possibly too large): $C_p(M) \approx |M|$ (since $\text{SMSE} \approx \text{Var} = \sigma^2|M|$).
+    \item If $M$ is incorrect (biased): $C_p(M) > |M|$.
+    \item Only suited for linear models with constant variance
+    \item quantifies the bias of the estimated
+    model
+\end{itemize}
+Usage: Choose model with small $C_p(M)$ where $C_p(M) \approx |M|$.
+\\ (Note: $C_p > |M|$ suggests a wrong model).
+
+\subsubsection{Akaike Information Criterion (AIC)}
+Choose $M$ which minimizes:
+$\text{AIC}(M) = -2 \hat{\ell}_M + 2|M|$
+
+Where $\hat{\ell}_M = \log(\text{Likelihood}(\hat{\beta}_{MLE}^M; \text{data}))$.
+\begin{itemize}
+    \item Term 1: decreases as $M$ gets more complex.
+    \item Term 2: Complexity penalty.
+\end{itemize}
+
+$\implies$ AIC and $C_p$ are approx. equivalent in Gaussian linear models.
+
+$\implies$ \textit{Note:} AIC does not have the property that $\text{AIC} \approx |M|$ for the correct model, but is very general.

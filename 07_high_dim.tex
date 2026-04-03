@@ -1,0 +1,48 @@
+\section{High Dimensional Linear Models}
+Case $p \gg n$: $\text{rank}(X) \leq \min(n,p) \implies X^\top X$ singular/not invertible $\implies$ Least Squares not unique.
+
+\begin{itemize}
+    \item Lasso and Ridge $\beta$ are not invariant to scaling of X and Y.
+\end{itemize}
+
+\subsection{Ridge Regression ($L_2$)}
+$ \hat{\beta}_R(\lambda) = \text{argmin}_\beta (\|Y - X\beta\|_2^2 + \lambda \|\beta\|_2^2) = (X^\top X + \lambda I)^{-1} X^\top Y $
+equal to $\min \|Y - X\beta\|_2^2 \text{ subject to } \|\beta\|_2 \le t(\lambda)$
+\begin{itemize}
+    \item Uniqueness: Unique if $\lambda > 0$. (Smallest EV of $X^\top X$ is 0 $\implies$ Smallest EV of $(X^\top X + \lambda I)$ is > 0 $\implies$ Invertible).
+    \item Intuition:
+    \begin{itemize}
+        \item $\lambda \to \infty$: Small variance, $\hat{\beta}_R(\lambda) \to 0$.
+        \item $\lambda \to 0$: Small bias (for $p < n$). Limit is $\hat{\beta}_{OLS}$.
+        \item Case $p \gg n$: Bias remains large even when $\lambda \to 0$ and estimated $\beta$ lives on row space of X.
+    \end{itemize}
+\end{itemize}
+
+Interpretation with $d_u^2$: in general in rotated world
+$ \hat{\alpha}_u^R = \left( \frac{d_u^2}{d_u^2 + \lambda} \right) \hat{\alpha}_u^{OLS} $
+\begin{itemize}
+    \item $X^\top X$ diagonal:  $d_u^2 = x_u^\top x_u$ (=variance/($n-1$) of $u$-th predictor) and $ \hat{\beta}_u^R = \left( \frac{d_u^2}{d_u^2 + \lambda} \right) \hat{\beta}_u^{OLS} $. $\hat{\beta}_u^{OLS}$ gets shrunken according to $d_u^2$ (shrink more if $d_u$ is small $\implies$ small variance $\implies$ weak signal (not important predictor)
+    \item $X^\top X$ non-diagonal: rotate and shrink coefficients corresponding to lin. comb. of predictors that explain little variance.
+\end{itemize}
+
+\subsection{Lasso Regression ($L_1$)}
+$ \hat{\beta}_L(\lambda) = \text{argmin}_\beta (\|Y - X\beta\|_2^2 / n + \lambda \|\beta\|_1) $
+equal to $\min \frac{1}{n} \|Y - X\beta\|_2^2 \text{ subject to } \|\beta\|_1 \le t(\lambda)$
+\begin{itemize}
+    \item No explicit solution (but convex optimization), exept $X^\top X$ is diagonal: then explicit solution exists(sign...).
+    \item Sparsity: Typically for many $j$'s, $\hat{\beta}_{L,j}(\lambda) = 0$.
+    \item $L_1$ is the only norm leading to sparsity ($p \leq 1$) \textit{and} convex optimization ($p \geq 1$).
+    \item Requires scaled covariates (ridge also): $x^{(i)} / \sqrt{\widehat{\text{Var}}(x^{(i)})}$.
+    \item Regularization Path: Because columns of $X$ are non-orthogonal, path is non-monotone (variable can leave active set as $\lambda$ decreases).
+    \item for n>p lasso converges to OLS solution for $\lambda \to 0$
+\end{itemize}
+
+Search for optimal $\lambda$:
+We don't have to search all of $\mathbb{R}^+$ for the optimal $\lambda$:
+\begin{itemize}
+    \item Upper bound: $\lambda_{max} = \max_j |(x^{(j)})^\top Y/n|$.
+    \\ Here all $\beta_j$'s are $0$ (and also for $\lambda' > \lambda_{max}$).
+    \item Lower bound: $\lambda \searrow 0$: the $\lambda^*$ where the number $|\{j : \hat{\beta}_j(\lambda^*) \neq 0\}| = n$.
+    (For any $\lambda > 0$ it holds that $|\{j; (\hat{\beta}_{\text{Lasso}}(\lambda))_j \neq 0\}| \le \min(n, p)$.).
+    \item $\to$ At $\lambda^*$ we find the \underline{Basis Pursuit} solution, which is the "simplest" (sparsest) model that perfectly interpolates the training data ($X\hat{\beta}(\lambda^*) = Y$).
+\end{itemize}

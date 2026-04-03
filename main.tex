@@ -1,0 +1,106 @@
+\documentclass[a4paper,landscape]{article} % '8pt' ignored by article; manual size set below
+
+% --- Font & Encoding ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[scale=0.92]{tgheros} 
+%\usepackage[libertine]{newtxsf}
+\renewcommand{\familydefault}{\sfdefault} % Forces Sans-Serif
+
+% --- Math Support ---
+\usepackage{amssymb,amsmath,amsthm,amsfonts}
+%\boldmath % This will make all math throughout the document bold
+% --- Layout & Graphics ---
+\usepackage[landscape, top=0.1cm, left=0.1cm, right=0.1cm, bottom=0.2cm]{geometry}
+\usepackage[dvipsnames, svgnames]{xcolor}
+\usepackage{multicol, multirow}
+\usepackage{calc}
+\usepackage{ifthen}
+\usepackage{etoolbox}
+\usepackage{enumitem} 
+\usepackage{soul}     % Better underlining
+\usepackage{titlesec}
+\usepackage[colorlinks=true, citecolor=blue, linkcolor=blue]{hyperref}
+
+% --- Settings ---
+\pagestyle{empty}
+\setcounter{secnumdepth}{0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+% Color Setup
+\definecolor{SecColor}{named}{MidnightBlue}
+\definecolor{SubColor}{named}{RoyalBlue}
+\definecolor{MathColor}{named}{DarkSlateGray}
+
+% Section Formatting
+\titleformat{\section}
+  {\normalfont\fontsize{8}{9}\selectfont\bfseries\color{SecColor}}
+  {}
+  {0pt}
+  {}
+  [{\color{SecColor}\titlerule[1pt]}]
+
+\titleformat{\subsection}
+  {\normalfont\fontsize{7}{8}\selectfont\bfseries\color{SubColor}}
+  {}
+  {0pt}
+  {\setulcolor{SubColor}\ul}
+
+\titleformat{\subsubsection}[runin] % [runin] puts text on the same line
+  {\normalfont\fontsize{6}{7}\selectfont\bfseries\color{black}}
+  {}
+  {0pt}
+  {\setulcolor{black}\ul}
+  [ : ] % Adds a colon after the header
+
+\titlespacing*{\section}{0pt}{0.2ex}{0.2ex}
+\titlespacing*{\subsection}{0pt}{0.2ex}{0.2ex}
+\titlespacing*{\subsubsection}{0pt}{0.2ex}{0.2ex}
+
+% Tighten Math Spacing
+\setlength{\abovedisplayskip}{1pt}
+\setlength{\belowdisplayskip}{1pt}
+\setlength{\abovedisplayshortskip}{0pt}
+\setlength{\belowdisplayshortskip}{0pt}
+
+% Shrink space around operators (=, +, -, etc.)
+\thinmuskip=1mu plus 1mu
+\medmuskip=1mu plus 1mu minus 1mu
+\thickmuskip=1mu plus 1mu minus 1mu
+
+\setlength{\arraycolsep}{1pt}  % Horizontal space in matrices
+\setlength{\tabcolsep}{1pt}    % Horizontal space in tables
+
+\setlist{nosep, leftmargin=*, labelsep=2pt}
+
+% Apply Math Color
+\everydisplay{\color{MathColor}}
+\everymath{\color{MathColor}}
+
+% Global List Compactness
+\setlist{nosep, leftmargin=*, labelsep=4pt}
+
+
+% -----------------------------------------------------------------------
+
+\begin{document}
+\raggedright
+\fontsize{6}{6.3}\selectfont
+\setlength{\multicolsep}{0pt}
+\setlength{\columnsep}{1pt}
+% Optional: Add a very thin line if 1pt is too hard to read
+%\setlength{\columnseprule}{0.1pt}
+
+\begin{multicols*}{5}
+  \input{01_background}
+  \input{02_linear_regression}
+  \input{03_GLS}
+  \input{04_model_selection}
+  \input{05_GLM}
+  \input{06_nonparametric_regression}
+  \input{07_high_dim}
+  \input{08_multiple_testing_and_cv}
+\end{multicols*}
+
+\end{document}

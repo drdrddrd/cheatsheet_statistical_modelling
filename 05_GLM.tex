@@ -1,0 +1,124 @@
+\section{Generalized Linear Models (GLMs)}
+
+\subsection{Binary Regression}
+Model: $Y_i \in \{0,1\}, \quad Y_i \sim \text{Bernoulli}(p(x_i))$.
+\\ $p(X_i) = \mathbb{P}[Y_i=1|X_i] = 1 - \mathbb{P}[Y_i=0|X_i]$.
+\\ (Note: No additive error term $\varepsilon_i$ like in linear models).
+
+\subsubsection*{Link Functions}
+\begin{itemize}
+    \item Logistic Linear Model (Logit):
+    $\log\left(\frac{p(X)}{1-p(X)}\right) = X^\top \beta \implies p(X) = \frac{\exp(X^\top \beta)}{1 + \exp(X^\top \beta)}$
+    \\ Map: $[0,1] \to \mathbb{R}$. 
+    (Odds $=\frac{p(X)}{1-p(X)}$)
+    \item Probit Linear Model:
+    $\Phi^{-1}(p(X_i)) = X^\top \beta$
+    \\ Where $\Phi$ is CDF of $\mathcal{N}(0,1)$.
+\end{itemize}
+$\implies$ Most of the time choose Logit. Estimates for $\hat{\beta}$ are on different scales, but significance testing for zero value yields similar results.
+
+\subsubsection*{Latent Variable Interpretation}
+Let $Z_i$ be a continuous latent (unobserved) variable:
+$Z_i = x_i^\top \beta + \varepsilon$
+\\ With observation rule: $Y_i = \mathbb{I}(Z_i > 0)$.
+\begin{itemize}
+    \item If $\varepsilon \sim \mathcal{N}(0,1) \implies$ Probit Model.
+    \item If $\varepsilon \sim \text{Logistic}(\mu=0, s=1) \implies$ Logistic Model.
+\end{itemize}
+
+\subsubsection*{Estimation (Logistic)}
+No $\sigma^2$ parameter. Estimate $\beta$ via MLE.
+$\hat{\beta} = \text{argmin}_\beta -\ell(\beta; y_1, \dots, y_n)$.
+\\ $\implies$ Convex optimization if $X$ has full rank (use any convex solver).
+
+\subsubsection{Iteratively Reweighted Least Squares (IRLS)}
+Algorithm to find MLE (Newton-Raphson / Fisher Scoring). Here applied to logistic regression.
+
+\begin{enumerate}
+    \item Initialize $\hat{p}_i$ (e.g., $0.99$ if $y_i=1$, $0.01$ if $y_i=0$).
+    \item Taylor Expansion of "logit($Y_i$)" around $\hat{p}_i$. Define adjusted response $Z_i$:
+    $Z_i := \underbrace{x_i^\top \hat{\beta}}_{f(a)} + \underbrace{\frac{1}{\hat{p}_i(1-\hat{p}_i)}}_{f'(a)} \underbrace{(Y_i - \hat{p}_i)}_{(x-a)}$
+    \\ (Variance of error term is $1/(\hat{p}_i(1-\hat{p}_i))$).
+    \item WLS Step: Regress $Z$ versus $X$ with weights $w_i = \hat{p}_i(1-\hat{p}_i)$. Obtain new $\hat{\beta}$.
+    \item Update $\hat{p}_i = \text{logit}^{-1}(x_i^\top \hat{\beta})$.
+    \item Repeat 2-4 until convergence $\to \hat{\beta}_{MLE}$.
+\end{enumerate}
+
+Inference at Convergence:
+$\hat{\beta}_{MLE}$ is a WLS solution.
+\subsubsection{Test Construction}
+\begin{itemize}
+    \item The above implies $\hat{\beta}_{MLE} \approx \mathcal{N}(\beta, (X^\top W X)^{-1})$ (for $n$ large).
+    \item Fisher Info $I(\beta) = X^\top W X$.
+    \item Define Covariance \& Weights:
+    $ \widehat{\text{Cov}}(\hat{\beta}_{MLE}) := (X^\top \hat{W} X)^{-1}, \quad \hat{W} = \text{diag}(\hat{w}), \quad \hat{w}_i = \hat{p}_i(1-\hat{p}_i) = \frac{\exp(X_i^\top \hat{\beta}_{MLE})}{(1 + \exp(X_i^\top \hat{\beta}_{MLE}))^2}$
+\end{itemize}
+
+Tests and CI (for individual $\beta_j$):
+\begin{itemize}
+    \item Test $H_0: \beta_j = 0$ vs $H_A: \beta_j \neq 0$.
+    \\ $Z = \frac{\hat{\beta}_j}{\widehat{se}(\hat{\beta}_j)} \approx \mathcal{N}(0,1)$ under $H_0$. (Wald test).
+    \item $\widehat{se}(\hat{\beta}_j) = \sqrt{\text{diag element } j \text{ of } \widehat{\text{Cov}}(\hat{\beta}_{MLE})}$.
+    \item CI: $I_j: \hat{\beta}_j \pm \Phi^{-1}(1-\alpha/2)\widehat{se}(\hat{\beta}_j)$.
+\end{itemize}
+$\implies$ Tests/CI are asymptotically correct ($n \to \infty$).
+\\ $\implies$ Residual plots are different than linear model; unfortunately not very informative.
+
+\subsection{General Case of GLMs}
+Setup:
+\begin{itemize}
+    \item $Y_i$ independent, $X_i \in \mathbb{R}^p$.
+    \item $\mathbb{E}[Y_i] =: \mu_i$ (function of $X_i$).
+    \item Link Function: $\eta_i := g(\mu_i) = X_i^\top \beta$. (Domain of $\mu_i \to \mathbb{R}$) (needs to be monotonic and differentiable $\implies$ inverse exists)
+\end{itemize}
+
+Examples:
+\begin{itemize}
+    \item Bernoulli: $\mu=p_i$, $g(\mu)=\text{logit}(\mu)$ (Logistic Reg).
+    \item Poisson: $Y_i \in \{0, 1, \dots\}$. $\mu=\lambda_i$. $g(\mu)=\log(\mu) \implies \log(\lambda_i) = X_i^\top \beta$.
+    \item Negative Binomial: $Y_i \sim \text{NegBin}(r, p_i), \quad Y_i \in \{0, 1, \dots\}$.
+    \\ Interpret: No. of successes until $r$ failures. "Overdispersed Poisson" (more var than Poisson).
+    \\ Poisson: $\mathbb{E}[Y_i]=\lambda, \text{Var}(Y_i)=\lambda_i$.
+    \\ NegBin: $\mathbb{E}[Y_i] = \frac{r p_i}{1-p_i} = \mu_i, \quad \text{Var}(Y_i) = \frac{r p_i}{p_i^2} = \mu_i + \frac{\mu_i^2}{r} = \mu_i + \alpha \cdot \mu_i^2$.
+    \\ $\text{Var}(Y_i) > \mathbb{E}[Y_i]$, with dispersion parameter $\alpha := \frac{1}{r}$.
+    \\ Link: $\log(\mu_i) = x_i^\top \beta$.
+\end{itemize}
+
+\subsubsection*{Analogue of (Partial) F-Test}
+Test $H_0: \beta_{1} = \dots = \beta_{p-q} = 0$ ($q$-dim submodel).
+\\ Use Log-Likelihood Ratio Test:
+$ t = 2(\ell(\hat{\beta}^{(p)}) - \ell(\hat{\beta}^{(q)})) \approx \chi^2_{p-q} \quad (\text{good if } n \text{ large}) $
+\textit{Note:} If we plug in linear model with $\varepsilon \sim \mathcal{N}$, we get the usual F-test.
+
+\subsubsection*{Model Selection \& Deviance}
+Minimize AIC or BIC.
+\begin{itemize}
+    \item Null Deviance: $-2\ell(\hat{\beta}^{intercept})$ ($n-1$ df).
+    \\ ($\to$ in linear models this would be $\|Y - \bar{Y}\|_2^2$).
+    \item Residual Deviance: $-2\ell(\hat{\beta}^{full})$ ($n-p$ df).
+    \item Analogue of $R^2$: $1 - \frac{\text{ResDev}}{\text{NullDev}} \quad (0 \leq R^2 \leq 1)$.
+\end{itemize}
+
+\subsection{Exponential Family}
+A distribution belongs to the univariate exponential family if its density function can be written as:
+$ f(y|\theta) = \exp \left( \frac{y\theta - b(\theta)}{\phi}w + c(y, \phi, w) \right) $
+
+where $\theta$: Natural or canonical parameter, $\phi$: Dispersion parameter, $w$: Known weight (usually 1), $b(\theta)$: Function where first ($b'$) and second ($b''$) derivatives exist.
+
+Examples:
+\begin{itemize}
+    \item Bernoulli ($y \in \{0,1\}$):
+    Density: $f(y|\pi) = \pi^y(1-\pi)^{1-y}$
+    Results: $\theta = \log(\frac{\pi}{1-\pi})$, \quad $b(\theta) = \log(1+e^\theta)$, \quad $\phi=1$, \quad $c=0$.
+
+    \item Poisson ($y \in \{0,1,\dots\}$):
+    Density: $f(y|\lambda) = \frac{\lambda^y e^{-\lambda}}{y!}$ 
+    %Results: $\theta = \log(\lambda)$, \quad $b(\theta) = e^\theta = \lambda$, \quad $\phi=1$, \quad $c(y) = -\log(y!)$.
+
+    \item Gaussian ($y \in \mathbb{R}$):
+    Density: $f(y|\mu, \sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp \left[ -\frac{(y-\mu)^2}{2\sigma^2} \right]$
+    %Results: $\theta = \mu$, \quad $b(\theta) = \frac{\mu^2}{2}$, \quad $\phi = \sigma^2$, \quad $w=1$.
+    %$c(y, \phi, w) = -\frac{y^2}{2\phi} - \frac{1}{2}\log(2\pi\phi)$.
+    \item Multivariate gaussian:
+    Density: $(2\pi)^{-n/2} \det(\boldsymbol{\Sigma})^{-1/2} \exp \left( -\frac{1}{2} (\mathbf{x} - \boldsymbol{\mu})^\mathrm{T} \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu}) \right)$
+\end{itemize}

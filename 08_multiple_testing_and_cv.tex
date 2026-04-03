@@ -1,0 +1,37 @@
+\section{Multiple Testing}
+Perform $m$ hypothesis tests.
+\\ Let $V = $ number of false positives (Null rejected though true).
+\\ For $m=1$: $\mathbb{P}[V > 0] = \mathbb{P}[H_0 \text{ rej } | H_0 \text{ true}] \leq \alpha$ (Type 1 control).
+
+\subsection{Error Measures for $m > 1$}
+$ \text{FWER} = \mathbb{P}[V > 0] \leq m \cdot \alpha $
+\begin{itemize}
+    \item $\leq$ above is true because of Bonferroni Bound: $\mathbb{P}(\cup E_i) \leq \sum \mathbb{P}(E_i)$.
+    \item For independent tests:
+    $ \text{FWER} = 1 - (1-\alpha)^m = m\alpha + O(\alpha^2) $
+    $\implies$ almost tight (meaning approx. $m \cdot \alpha$).
+    \item For pos. dependent tests: $\text{FWER} \approx \leq \alpha$ and $\ll m\alpha$ (Bonferroni is too conservative)(FWER is lower than in independence case (opposite is true for neg. dependent)).
+    \item Bonferroni adjusted p-values: $\min(m \cdot p_j, 1)$.
+\end{itemize}
+
+$\text{FDR} = \mathbb{E}[V/R \mid R > 0]$ where $R =$ number of rejections)
+
+$\implies$ For controlling FWER: Bonferroni-Holm procedure bit better than plain Bonferroni adjustment
+$\implies$ For controlling FDR: Benjamini-Hochberg procedure (which is only proven to be correct for independent hypotheses)
+
+Procedures: Sort p-values: $p_{(1)} \leq p_{(2)} \leq \dots \leq p_{(m)}$.
+\begin{itemize}
+    \item Bonferroni-Holm (FWER):
+    Reject $H_{(1)}, \dots, H_{(k-1)}$ where $k$ is the first index such that:
+    $ p_{(k)} > \frac{\alpha}{m-k+1} $
+    \item Benjamini-Hochberg (FDR):
+    Reject $H_{(1)}, \dots, H_{(k)}$ where $k$ is the largest index such that:
+    $ p_{(k)} \leq \frac{k}{m}\alpha $
+\end{itemize}
+\section{Cross-Validation}
+CV(h) is an estimator for $n^{-1} \sum_{i=1}^{n} \mathbb{E}[(\hat{f}_h(x_i) - f(x_i))^2] + \sigma^2$ and not for MSE(x) (check bias variance trade off above).
+\begin{itemize}
+    \item Leave-One-Out CV:
+    Does not optimize MSE at a specific point $x$, but the optimal over all $x$ averaged.
+    \item K-Fold CV
+\end{itemize}

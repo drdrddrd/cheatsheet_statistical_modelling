@@ -1,0 +1,155 @@
+\section{Background}
+
+\subsection*{Scalar Random Variables}
+Let $X, Y, Z$ be random variables and $a, b, c, d$ constants.
+
+Expectation:
+\begin{itemize}
+    \item Linearity: $\mathbb{E}[aX + b] = a\mathbb{E}[X] + b$ and $\mathbb{E}[X+Y] = \mathbb{E}[X] + \mathbb{E}[Y]$.
+    \item Product: $\mathbb{E}[XY] = \mathbb{E}[X]\mathbb{E}[Y]$ if $X, Y$ are independent (or at least uncorrelated (above is true if and only if cov = 0)).
+\end{itemize}
+
+Variance \& Covariance:
+\begin{itemize}
+    \item $\text{Cov}[X,Y] := \mathbb{E}[(X - \mathbb{E}[X])(Y - \mathbb{E}[Y])] = \mathbb{E}[XY] - \mathbb{E}[X]\mathbb{E}[Y]$.
+    \item $\text{Var}[aX + b] = a^2 \text{Var}[X] \implies \sigma[aX+b] = |a|\sigma[X]$.
+    \item $\text{Var}[X + Y] = \text{Var}[X] + \text{Var}[Y] + 2\text{Cov}[X,Y]$. (for minus, minus before 2cov)
+    \item Independence:
+    \begin{itemize}
+        \item If $X, Y$ indep./uncorrelated: $\text{Var}[X+Y] = \text{Var}[X] + \text{Var}[Y]$.
+        \item General sum: $\text{Var}[\sum_{i=1}^n a_i X_i] = \sum_{i=1}^n a_i^2 \text{Var}[X_i]$ (if $X_i$ independent).
+        \item Functions: If $X, Y$ independent $\implies f(X), g(Y)$ independent.
+    \end{itemize}
+    \item Bilinearity:
+    $\text{Cov}[aX + bY, cZ + dW] = ac\text{Cov}[X,Z] + ad\text{Cov}[X,W] + bc\text{Cov}[Y,Z] + bd\text{Cov}[Y,W]$.
+\end{itemize}
+
+\subsection*{Random Vectors}
+Let $\mathbf{Y}$ be an $n \times 1$ random vector, $A$ a fixed $m \times n$ matrix, and $\mathbf{b}$ a fixed $m \times 1$ vector.
+
+Definitions:
+\begin{itemize}
+    \item $\mathbb{E}[\mathbf{Y}]$ is the vector of component-wise means.
+    \item $\text{Cov}[\mathbf{Y}]$ is the $n \times n$ symmetric matrix with entries $(\text{Cov}[\mathbf{Y}])_{ij} = \text{Cov}[Y_i, Y_j]$.
+    \item Matrix Identity: $\text{Cov}[\mathbf{Y}] = \mathbb{E}[\mathbf{Y}\mathbf{Y}^\top] - \mathbb{E}[\mathbf{Y}]\mathbb{E}[\mathbf{Y}]^\top$.
+\end{itemize}
+
+Linear Transformations:
+\begin{itemize}
+    \item $\mathbb{E}[A\mathbf{Y} + \mathbf{b}] = A\mathbb{E}[\mathbf{Y}] + \mathbf{b}$.
+    \item $\text{Cov}[A\mathbf{Y} + \mathbf{b}] = A \text{Cov}[\mathbf{Y}] A^\top$.
+\end{itemize}
+
+Positive Semidefinite Property:
+For any arbitrary fixed vector $\mathbf{a}$ ($n \times 1$):
+$ 0 \leq \text{Var}[\mathbf{a}^\top \mathbf{Y}] = \text{Cov}[\mathbf{a}^\top \mathbf{Y}] = \mathbf{a}^\top \text{Cov}[\mathbf{Y}] \mathbf{a} $
+$\implies$ Covariance matrices are always positive semidefinite (usually positive definite).
+
+\subsection{Distributions}
+
+\subsubsection{Normal Distribution}
+$Z \sim \mathcal{N}(0,1) \implies Y = \mu + \sigma Z \sim \mathcal{N}(\mu, \sigma^2)$.
+\\$Y \sim \mathcal{N}(\mu, \sigma^2) \implies Z := \frac{Y-\mu}{\sigma} \sim \mathcal{N}(0,1)$.
+
+Multivariate ($n$-dim):
+\begin{itemize}
+    \item Def: $Z = (Z_1, \dots, Z_n)^\top, Z_i \overset{i.i.d}{\sim} \mathcal{N}(0,1) \implies Z \sim \mathcal{N}(0, I_n)$.
+    \item $Y = \mu + AZ \implies Y \sim \mathcal{N}(\mu, \Sigma)$ with $\Sigma = AA^\top$.
+    \item Linear Transformation: If $X \sim \mathcal{N}_n(\mu, \Sigma)$ and $Y = AX + b$ (where $A \in \mathbb{R}^{m \times n}$):
+    $Y \sim \mathcal{N}_m(A\mu + b, A\Sigma A^\top) $
+\end{itemize}
+
+Properties (Normal is special):
+\begin{itemize}
+    \item $\text{Cov}(Y_i, Y_j) = 0 \iff Y_i \perp Y_j$.
+    \\ \textit{(Note: Independence always $\implies$ Cov=0. The reverse is true \underline{only} for Joint Normal distributions($aY_i + bY_j$ is normal).}
+    \item Independence of Linear Forms:
+    Let $Y \sim \mathcal{N}(\mu, \sigma^2 I_n)$, $\text{nrow}(A) + \text{nrow}(B) \leq n $. Let $U = AY$ and $V = BY$.
+    $ U \perp V \iff AB^\top = 0 $
+    \textit{Proof/Intuition:} $\text{Cov}(U, V) = A \text{Cov}(Y) B^\top = A(\sigma^2 I) B^\top = \sigma^2 AB^\top$.
+\end{itemize}
+
+\subsubsection{Derived Distributions}
+Chi-square ($\chi^2$):
+\begin{itemize}
+    \item $Z_i \overset{i.i.d}{\sim} \mathcal{N}(0,1) \implies \sum_{i=1}^n Z_i^2 \sim \chi^2_n$.
+    \item Quadratic Form: $Y \sim \mathcal{N}(\mu, \Sigma) \implies (Y-\mu)^\top \Sigma^{-1} (Y-\mu) \sim \chi^2_n$.
+    \item Degenerate Case: If $e \sim \mathcal{N}(0, M)$ where $M \in \mathbb{R}^{n \times n}$ is idempotent ($M^2=M$) with $\text{rank}(M)=r < n$:
+    $e^\top M e \sim \chi^2_r $
+\end{itemize}
+
+F-distribution:
+\\ $X \sim \chi^2_m, \ Y \sim \chi^2_n, \ X \perp Y \implies \frac{X/m}{Y/n} \sim F_{m,n}$.
+
+t-distribution:
+\\ $Z \sim \mathcal{N}(0,1), \ V \sim \chi^2_k, \ Z \perp V \implies T = \frac{Z}{\sqrt{V/k}} \sim t_k$.
+\\ \textit{Relationship:} $X \sim t_k \implies X^2 \sim F_{1,k}$.
+
+\subsubsection{Limit Theorems}
+\begin{itemize}
+    \item Classical CLT: $X_i \overset{i.i.d}{\sim} F$ (any distr.) with $\mathbb{E}[X_i]=\mu, \text{Var}(X_i)=\sigma^2 < \infty$:
+    $ \sqrt{n}(\bar{X}_n - \mu) \xrightarrow{d} \mathcal{N}(0, \sigma^2) \quad (n \to \infty) $
+    \item Lindeberg CLT: Similar result for independent but \textit{not identically} distributed RVs (requires Lindeberg condition).
+    \item Cochran's Theorem: Decomposes sum of squares of Normals into independent $\chi^2$ terms (fundamental for ANOVA/Regression).
+\end{itemize}
+
+\subsection{Linear Algebra \& Calculus}
+
+$\sum_{i=1}^{n} x_i^2 - n\bar{x}^2 = \sum_{i=1}^{n} (x_i - \bar{x})^2$
+
+\subsubsection{Matrix Properties}
+Inverse: $(A^{-1})^\top = (A^\top)^{-1}$(inverse of diagonal matrix is also diag.).
+$A=\begin{pmatrix}a & b \\ c & d\end{pmatrix} \implies A^{-1} = \frac{1}{ad-bc}\begin{pmatrix}d & -b \\ -c & a\end{pmatrix}$
+
+Trace: $\text{tr}(A) = \sum A_{ii}$.
+\begin{itemize}
+    \item Linear: $\text{tr}(aA + bB) = a\,\text{tr}(A) + b\,\text{tr}(B)$.
+    \item Cyclic: $\text{tr}(ABC) = \text{tr}(BCA) = \text{tr}(CAB)$.
+\end{itemize}
+
+Rank: $\text{rk}(A)$ = max number of linearly independent rows (or columns).
+
+Special Matrices:
+\begin{itemize}
+    \item Orthogonal: $Q^{-1} = Q^\top$ (Square, rows/cols are orthonormal) (scalar product of two non-zero vectors is 0 implies orthogonality implies linear independence).
+    \item Symmetric: $A^\top = A$.
+    \item Spectral Decomposition: If $A$ symmetric, $A = Q D Q^\top$ ($D$ diagonal, $Q$ orthogonal).
+\end{itemize}
+
+Definiteness: For Quadratic Form $x^\top A x$:
+\begin{itemize}
+    \item Pos. Definite (pd): $x^\top A x > 0 \,\, \forall x \neq 0$. ($\implies$ Eigenvals $>0$, trace/det $>0$).
+    \item Pos. Semi-Definite (psd): $x^\top A x \geq 0 \,\, \forall x$.
+    \item Square Root: If $A$ is psd, $A^{1/2}$ exists (Cholesky decomposition).
+\end{itemize}
+
+Subspaces:
+\begin{itemize}
+    \item Range: $R(A) = \{y : y = Ax\}$.
+    \item Null space: $N(A) = \{x : Ax = 0\}$.
+    \item Rank-Nullity: $\text{rk}(A) = \dim(R(A)) = n - \dim(N(A))$.
+\end{itemize}
+
+\subsubsection{Orthogonal Projection}
+Matrix $P$ is an orthogonal projection onto subspace $S$ if:
+1. Idempotent: $P = P^2$.
+2. Symmetric: $P = P^\top$.
+
+Properties:
+\begin{itemize}
+    \item $\text{rk}(P) = \text{tr}(P)$.
+    \item Eigenvalues $\in \{0, 1\}$. Geom. multiplicity of eig.val. 1 is $\text{rk}(P)$.
+    \item $I - P$ is also a projection (onto $S^\perp$); $P(1-P) = 0$.
+    \item Formula: If cols of $B$ are basis of subspace $S$, og. projection on $S$ is:
+    $P_S = B(B^\top B)^{-1} B^\top $
+    (Special case: If basis is Orthonormal, $P_S = B B^\top$).
+\end{itemize}
+
+\subsubsection{Differentiation Rules}
+$A$ is a matrix; $a, x, y$ are vectors.
+Cauchy-Schwarz: $|\langle u, v \rangle|^2 \leq \langle u, u \rangle \cdot \langle v, v \rangle$.
+
+Vector/Matrix Calculus:
+
+$\frac{\partial (y^\top x)}{\partial x} = y$; $\frac{\partial (x^\top A x)}{\partial x} = (A + A^\top)x$; $\frac{\partial (Ax)}{\partial x} = A^\top$; $\frac{\partial (Ax)}{\partial x^\top} = A$
+

@@ -1,0 +1,70 @@
+\section{Nonparametric Regression}
+Model: $Y_i = f(x_i) + \varepsilon_i, \quad \varepsilon_i \text{ i.i.d. with } \mathbb{E}[\varepsilon]=0, \text{Var}(\varepsilon)=\sigma^2$.
+\\ Assumption: $f(\cdot)$ is smooth (e.g., twice continuously differentiable).
+
+\subsection{Local Averaging Estimators}
+Specific way to estimate $f(\cdot)$:
+$ \hat{f}(x) = \frac{\sum_{i=1}^n w_i(x) Y_i}{\sum_{i=1}^n w_i(x)} $
+with for Nadaraya-Wats.: $w_i(x) = K \left( \frac{x - x_i}{h} \right)$. Kernel is symmetric (around 0) prob. density 
+
+Examples:
+\begin{itemize}
+    \item Gasser-Müller: Isolated points get more weight (weights sum up to 1).
+    \item Nearest Neighbor: Average of $k$ closest neighbors (can be written as kernel estimator).
+    \item Local Polynomial Estimator (usually $p > 0$):
+    \begin{itemize}
+        \item Nadaraya-Watson kernel estimator ($p=0$):
+        $ \hat{\beta}_0(x) = \underset{\beta_0}{\text{argmin}} \sum_{i=1}^n w_i(x)(Y_i - \beta_0)^2 = \hat{f}(x) = \frac{\sum w_i Y_i}{\sum w_i} \text{ where } w_i(x) = K\left(\frac{x-x_i}{h}\right)$
+        \item Local Linear estimator ($p=1$):
+        $ (\hat{\beta}_0(x), \hat{\beta}_1(x)) = \underset{\beta_0, \beta_1}{\text{argmin}} \sum_{i=1}^n w_i(x)(Y_i - \beta_0 - \beta_1(x_i - x))^2 $ and then plug $\beta$'s in $\hat{f}(x) = \hat{\beta}_0 + \hat{\beta}_1(x_i - x)$
+        (Better at edges than Nadaraya-Watson).
+        \\ \textit{Note:} At $x_i=x$, $\hat{f}(x) = \hat{\beta}_0$ for both but their estimate for $\beta_0$ is different ($\beta_0$ is the same if $\sum_{i=1}^{n} w_{i}(x_i-x) X_{i} = 0$ (symmetric)(so $\hat{f}(x)$ are equivalent at location $x$ ). and can estimate derivative $\hat{f}'(x) = \hat{\beta}_1(x)$ from local linear est.
+    \end{itemize}
+    \item Smoothing Splines: Tuning parameter $\lambda$. infinite dim optimization, but turns out to be $O(n)$ problem.
+    \\ $\lambda \to \infty$: OLS. $\lambda \to 0$: Interpolation.
+\end{itemize}
+
+Linearity \& Inference:
+All above are linear estimators. We can define a "hat matrix" $H$:
+ $\hat{Y} = H Y, \quad H: (Y_1, \dots, Y_n)^\top \mapsto (\hat{f}(x_1), \dots, \hat{f}(x_n))^\top$
+ 
+\begin{itemize}
+    \item For example nadaraya watson: $\hat{y}_r = \sum_{s=1}^{n} \left[ \frac{K \left( \frac{x_r - x_s}{h} \right)}{\sum_{\ell=1}^{n} K \left( \frac{x_r - x_\ell}{h} \right)} \right] \cdot Y_s$ ,where we define: $H_{rs} = \frac{K \left( \frac{x_r - x_s}{h} \right)}{\sum_{\ell=1}^{n} K \left( \frac{x_r - x_\ell}{h} \right)}$
+    \item Degrees of Freedom: $df = \text{tr}(H)$.
+    \item Variance Estimate: $\hat{\sigma}^2 = \frac{1}{n - \text{tr}(H)} \sum_{i=1}^n (Y_i - \hat{f}(x_i))^2$.
+    \item Confidence Intervals: Can construct something that asymptotically follow $\mathcal{N}(0,1)$, with condition that $h \ll n^{-1/5}$ (can construct CI for $f(x)$ with constant width w.r.t $x$).
+\end{itemize}
+
+Convergence Rates (MSE):
+For twice diff. $f$ at $x$:
+\begin{itemize}
+    \item Linear Model (Correct): $\text{MSE}(x) \sim n^{-1} \sigma_\varepsilon^2 C(x, X)$.
+    \item Nonparametric: $\text{MSE}(x) \sim n^{-4/5} C(\sigma_\varepsilon, f'', K)$.
+\end{itemize}
+$\implies$ As $n$ increases, MSE shrinks faster for parametric models than nonparametric.
+
+\subsection{Bias-Variance Trade-off}
+Nonparametric methods require a tuning parameter like $h$.
+\\ Goal: Minimize $\text{MSE}(x) = \mathbb{E}[(\hat{f}_h(x) - f(x))^2]$ or Integrated MSE ($\text{IMSE} = \int \text{MSE}(x) dx$).
+
+We can always decompose MSE into: $\text{MSE}(x) = \underbrace{(\mathbb{E}[\hat{f}_h(x)] - f(x))^2}_{\text{Bias}^2} + \underbrace{\text{Var}(\hat{f}_h(x))}_{\text{Variance}} $
+
+The Trade-off:
+\begin{itemize}
+    \item Small $h$ (Rough): Bias $\downarrow$, Variance $\uparrow$.
+    \item Large $h$ (Smooth): Bias $\uparrow$, Variance $\downarrow$.
+\end{itemize}
+
+Selection:
+The global optimal $h$ can be found by minimizing $\text{IMSE} = \int \text{MSE}(x) dx$.
+
+$\to$ but CV aims for optimizing $\int \text{MSE}(x)p(x)dx$
+(where $p(x) \text{ is the density of } x_1, \dots, x_n$) ($\text{if } p(x) \sim \text{Uniform}[0,1]$ (like $x_i = i/n$) $= \int \text{MSE}(x) dx$)
+
+
+\subsection{Curse of Dimensionality}
+\begin{itemize}
+    \item Nonparametric methods perform poorly for $p \ge 4$ unless $n$ is very large. 
+    \item Best MSE rate ($f$ twice diff) is $\sim n^{-\frac{4}{4+p}}$ (for kernel estimators and many others)
+    \item Possible Solution: Use Additive Models with rate $\sim n^{-4/5}pC$
+\end{itemize}

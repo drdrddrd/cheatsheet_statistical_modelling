@@ -1,0 +1,129 @@
+% 03_GLS.tex
+
+\section{GLS}
+\subsection*{Known $\Sigma$}
+Model: $Y = X\beta + \varepsilon, \quad \varepsilon \sim \mathcal{N}_n(0, \sigma^2 \Sigma)$
+\\ {\tiny ($\Sigma$ known pos. definite, $\sigma^2$ unknown)}
+
+\subsubsection*{OLS on this model}
+$\hat{\beta}_{OLS} \sim \mathcal{N}_p(\beta, \sigma^2(X^\top X)^{-1} X^\top \Sigma X (X^\top X)^{-1})$
+\begin{itemize}
+    \item Unbiased, but p-values from standard software (assuming $\Sigma=I$) are not valid.
+\end{itemize}
+
+\subsubsection*{GLS Estimator}
+Transform model with $\Sigma^{-1/2}$:
+$\tilde{Y} = \Sigma^{-1/2}Y, \quad \tilde{X} = \Sigma^{-1/2}X, \quad \tilde{\varepsilon} = \Sigma^{-1/2}\varepsilon$
+\\ $\implies \tilde{Y} = \tilde{X}\beta + \tilde{\varepsilon}, \quad \tilde{\varepsilon} \sim \mathcal{N}_n(0, \sigma^2 I)$
+
+Apply OLS on $\tilde{Y}$ vs $\tilde{X}$:
+$\hat{\beta}_{GLS} = \underset{\beta}{\text{argmin}} \|\tilde{Y} - \tilde{X}\beta\|_2^2 = \underset{\beta}{\text{argmin}} (Y - X\beta)^\top \Sigma^{-1} (Y - X\beta) = (\tilde{X}^\top \tilde{X})^{-1} \tilde{X}^\top \tilde{Y} = (X^\top \Sigma^{-1} X)^{-1} X^\top \Sigma^{-1} Y$
+
+Properties:
+\begin{itemize}
+    \item $\hat{\beta}_{GLS} \sim \mathcal{N}_p\left( \beta, \sigma^2 (X^T \Sigma^{-1} X)^{-1} \right)$
+    \item Because $\hat{\beta}_{GLS}$ is a linear function of $Y$ and $Y$ is jointly Gaussian:
+    \item UMVU: Smallest variance among \textit{all} unbiased estimators (due to Gaussian $\varepsilon$).
+    \item Note: With non-Gaussian assumption but $\mathbb{E}[\varepsilon]=0, \text{Cov}(\varepsilon)=\sigma^2\Sigma$, $\hat{\beta}_{GLS}$ is still BLUE, but not necessarily UMVU.
+\end{itemize}
+
+\subsubsection*{Weighted Least Squares (WLS)}
+Special case of GLS: $\Sigma = \text{diag}(v_1, \dots, v_n)$ with $v_i > 0$.
+\\ $\text{Var}(\varepsilon_i) = \sigma^2 v_i$.
+\begin{itemize}
+    \item Weights $w_i = 1/v_i \propto 1/\text{Var}(\varepsilon_i)$.
+    \item $\hat{\beta}_{WLS} = \underset{\beta}{\text{argmin}} (Y - X\beta)^\top \Sigma^{-1} (Y - X\beta) = \text{argmin}_\beta \sum_{i=1}^n w_i (y_i - x_i^\top \beta)^2$.
+\end{itemize}
+
+\subsection*{Unknown $\Sigma$}
+Hard to estimate $\Sigma$ (has $n(n+1)/2$ params).
+\begin{itemize}
+    \item Example: Toeplitz model (Structure for AR(1) model in time series): \\
+    $\Sigma_{ij} = \rho^{|i-j|} \quad (i,j=1,\dots,n), \quad (0 < \rho < 1)$. \\
+    Only one unknown parameter $\rho$: implies exp. decaying positive correlations among $\varepsilon_i$'s.
+    \item Iterative Estimation: (can estimate $\rho$ with this
+    \begin{enumerate}
+        \item Init with OLS $\to$ residuals $r = Y - X\hat{\beta}_{OLS}$.
+        \item Estimate $\Sigma$ based on $r$ (using e.g MLE, possibly non-convex optimization problem).
+        \item Run GLS based on $\hat{\Sigma}$ to get $r = Y - X\hat{\beta}_{GLS}$.
+        \item Iterate 2 \& 3 until convergence.
+
+    \end{enumerate}
+    \item Using a consistent estimate $\hat{\Sigma}$ (e.g. via MLE) yields the same asymptotic variance as the true GLS; asymptotically unbiased.
+\end{itemize}
+
+\subsubsection{Heteroscedastic Errors \& Robust Inference}
+Case: $\varepsilon \sim \mathcal{N}_n(0, D), \quad D = \text{diag}(\sigma_1^2, \dots, \sigma_n^2)$.
+\\ Cannot consistently estimate unknown $\sigma_i^2$ from $n$ obs.
+\\ WLS is optimal but we don't know $D$, so we stick to OLS.
+\\ $\hat{\beta}_{OLS} \sim \mathcal{N}_p(\beta, (X^\top X)^{-1} X^\top D X (X^\top X)^{-1})$.
+
+%%%%%%%%%%%%
+Sandwich Formula: We can consistently estimate $\text{Cov}(\hat{\beta}_{OLS})$ (because its only a $p \times p$ matrix) by using residuals $r = Y - X\hat{\beta}_{OLS}$.
+\begin{itemize}
+    \item $\hat{D} = \text{diag}(r_1^2, \dots, r_n^2)$.
+    \item $\widehat{\text{Cov}}(\hat{\beta}_{OLS}) = (X^\top X)^{-1} X^\top \hat{D} X (X^\top X)^{-1}$.
+    \item $\widehat{\text{Cov}}(\hat{\beta}_{OLS}) - \text{Cov}(\hat{\beta}_{OLS})) \to 0$ in probability ($n \to \infty$).
+\end{itemize}
+
+Testing $H_0: \beta_j = 0$ vs $H_A: \beta_j \neq 0$.
+
+$T = \frac{\hat{\beta}_j}{\widehat{se}_{rob}(\hat{\beta}_j)}$
+
+Where the robust standard error is:
+$\widehat{se}_{rob}(\hat{\beta}_j) = \sqrt{[\widehat{\text{Cov}}(\hat{\beta})]_{jj}} = \sqrt{ [(X^\top X)^{-1} X^\top \hat{D} X (X^\top X)^{-1}]_{jj} }$
+
+\begin{itemize}
+    \item Under $H_0: T \xrightarrow{d} \mathcal{N}(0,1)$ as $n \to \infty$.
+    \item \textit{Note:} Not an exact distributional statement (such as a t-distribution).
+\end{itemize}
+Guideline:
+\begin{itemize}
+    \item Homoscedastic: Do not use Sandwich. LS is optimal. Sandwich pays a price in efficiency.
+    \item Heteroscedastic: Use Sandwich. LS fails. Sandwich works asymptotically. Gain can be massive.
+\end{itemize}
+
+\section{Gauss-Markov Theorem}
+Let $Y = X\beta + \varepsilon, \quad \mathbb{E}[\varepsilon]=0, \quad \text{Cov}(\varepsilon) = \sigma^2 I, \quad \text{rank}(X)=p$.
+\\ Let $c$ be an arbitrary $p$-dim vector.
+\begin{itemize}
+    \item Then $c^\top \hat{\beta}_{LS}$ has minimal variance among \underline{all linear} unbiased estimators of $c^\top \beta$ ("BLUE").
+    \item If $\varepsilon$ normally distributed: Minimal variance among \underline{all} unbiased estimators ("UMVU").
+\end{itemize}
+
+Further comments on distribution assumptions:
+\begin{itemize}
+    \item If distribution of $\varepsilon$ is known (assuming $\varepsilon_1, \dots, \varepsilon_n \overset{i.i.d.}{\sim} \mathcal{D}_\theta$):
+    Use MLE w.r.t. $\theta$. This is asymptotically optimal (reaches Cramer-Rao bound).
+    \item If distribution of $\varepsilon$ is unknown:
+    Consider nonlinear robust estimators (this topic is not covered in the course).
+\end{itemize}
+
+\section{Misspecification of Linear Model}
+True model: $y_i = f(X_i) + \varepsilon_i, \quad \mathbb{E}[\varepsilon_i|X_i] = 0$.
+(Assumption: $X$ is a random variable and pairs $(X_1, Y_1), \dots, (X_n, Y_n)$ are i.i.d.)
+\\ Best linear approximation: $Y_i = X_i^\top \beta^* + \underbrace{(f(X_i) - X_i^\top \beta^*) + \varepsilon_i}_{=:\eta_i}$.
+\\ where $\beta^* = \text{argmin}_\beta \mathbb{E}[\|Y - X\beta\|_2^2]$.
+\begin{itemize}
+    \item $\mathbb{E}[\eta_i]=0$, but $\mathbb{E}[\eta_i|X_i] \neq 0$. (we removed intercept w.l.o.g.)
+    \item Surprisingly, robust sandwich formula works asymptotically for estimating the best approx parameter $\beta^*$ for the linear model, even if true model is nonlinear.
+    \item Tests/CIs are valid for $\beta^*$ (best linear approx).
+\end{itemize}
+
+\section{Analyzing Residuals}
+Check assumptions of $\varepsilon$:
+\begin{itemize}
+    \item \textit{Normal Plot:} Check Gaussian distribution of $\varepsilon_i$.
+    Evidence against $\mathcal{N}$ (outliers, heavy tails) $\implies$ consider robust estimators.
+    \item \textit{Tukey-Anscombe Plot:} Residuals $r_i$ vs Fitted values $\hat{y}_i$.
+    Checks $\mathbb{E}[\varepsilon_i]=0 \ \forall i$ and $\text{Var}(\varepsilon_i) \equiv \text{const} \ \forall i$.
+    Linear increase of variability: try $\log(Y)$.
+    $\sqrt{\cdot}$ increase: try $\sqrt{Y}$.
+    \item \textit{Serial Residual Plot:} Plot $r_i$ vs index (or $r_{i-1}$).
+    Checks $\text{corr}(\varepsilon_i, \varepsilon_j) = 0 \; \forall i \neq j$ against serial correlation of residuals/errors.
+    \begin{itemize}
+        \item If correlated $\implies$ try GLS.
+    \end{itemize}
+    \item \textit{Goodness of fit testing:} Can test $H_0$: ideal situation (like constant variance).
+    \item \textit{lm object in R: Standardized Residuals:} $\tilde{r}_i = \frac{r_i}{\hat{\sigma}\sqrt{1-H_{ii}}}$.
+\end{itemize}

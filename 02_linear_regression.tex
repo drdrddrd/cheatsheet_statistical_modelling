@@ -1,0 +1,233 @@
+% 02_linear_regression.tex
+
+\section{Linear Regression}
+\subsection*{Notation}
+$Y = (Y_1, \dots, Y_n)^T, \quad x^{(j)} = (x_{1,j}, \dots, x_{n,j})^T, \quad x_i = (x_{i,1}, \dots, x_{i,p})^T, \quad \varepsilon = (\varepsilon_1, \dots, \varepsilon_n)^T$
+
+\subsection*{Matrix Notation}
+$Y = X\beta + \epsilon$
+
+Where $Y \in \mathbb{R}^n$, $\beta \in \mathbb{R}^p$, $\epsilon \in \mathbb{R}^n$, and $X$ is the $n \times p$ design matrix.
+\begin{itemize}
+    \item linear model? group $\beta$, define the group as new parameter. if $\beta$ is inside a function with $X$ (log,exp) than only linear if transformations are allowed
+\end{itemize}
+
+\subsection*{Effect of Linear Transformations}
+Consider transformations $X' = aX + b$ and $Y' = cY + d$ (with $a, c \neq 0$).
+\begin{itemize}
+    \item Slope ($\hat{\beta}$): $\hat{\beta}' = \frac{c}{a} \hat{\beta}$. Changes with scaling ($a,c$), invariant to shift ($b,d$).
+    \item Intercept ($\hat{\alpha}$): $\hat{\alpha}' = c\hat{\alpha} + d - \frac{bc}{a}\hat{\beta}$.
+    \item Variance ($\hat{\sigma}^2$): $\hat{\sigma}'^2 = c^2 \hat{\sigma}^2$. Changes only if $Y$ is scaled.
+    \item Fit ($R^2, r$, t-tests): Invariant.
+\end{itemize}
+
+\subsection*{Least Squares Estimator}
+Goal: Estimate true $\beta$.
+$\hat{\beta}_{LS} = \underset{\beta}{\text{argmin}} \|Y - X\beta\|_2^2 = \sum (Y_i - (x_i^\top \beta))^2$
+\begin{itemize}
+    \item Convex problem. Unique solution for $\hat{\beta}_{LS}$ iff $\text{rank}(X)=p$ which $\implies n \ge p$ and differentiable. But $\hat{Y}$ is always unique.
+    \item Normal equations ($p$ equations): 
+
+        $X^\top X \hat{\beta} = X^\top Y$, 
+        $\hat{\beta} = (X^\top X)^{-1} X^\top Y$
+        {\tiny $((X^\top X)^{-1} \text{ exists if rank}(X)=p)$}
+    \item Coefficient Interpretation: $\hat{\beta}_j$ measures the linear effect of $X^{(j)}$ on $Y$ that is \textit{not} linearly explained by the other predictors.
+        \begin{itemize}
+            \item Generally, $\hat{\beta}_j \neq \hat{\beta}_{\text{single},j}$ (where $\hat{\beta}_{\text{single},j}$ is the coefficient from a simple linear regression of $Y$ on $X^{(j)}$).
+            \item Exception: If the features are orthogonal (i.e., $X^\top X$ is diagonal, implying uncorrelated centered features), then the coefficients in simple and multiple regression are identical ($\hat{\beta}_j = \hat{\beta}_{\text{single},j}$).
+        \end{itemize}
+\end{itemize}
+
+\subsubsection*{Special Case: Simple Regression}
+Line passes through $(\bar{x}, \bar{y})$ (if intercept exists).
+Regression to the mean:
+$\frac{\hat{Y}(x) - \bar{Y}}{\hat{\sigma}_Y} = \hat{\rho}_{xy} \frac{x - \bar{x}}{\hat{\sigma}_x}$.
+Since $\hat{\rho}_{xy} \leq 1$, predictions $\hat{Y}$ are closer to the mean (in SDs) than $x$ is to its mean.
+
+\subsection*{Geometric Properties of LS}
+\begin{itemize}
+    \item $Y \in \mathbb{R}^n$
+    \item $\text{Col}(X) = \text{span}(X)$: $p$-dim subspace of $\mathbb{R}^n$
+    \item $\text{Col}(X)^\perp$: orth. complement of $\text{Col}(X)$ ($(n-p)$-dim)
+    \item $\hat{Y} = X\hat{\beta}$: orth. proj. of $Y$ onto $\text{Col}(X)$
+    \item $\hat{Y} = PY, \quad {P = X(X^\top X)^{-1}X^\top}, \quad \text{tr}(P)=p$
+    \item Interpretation of P:
+    $\hat{y}_i = p_{ii} y_i + \sum_{j \neq i} p_{ij} y_j$
+    \begin{itemize}
+        \item $p_{ii}$ : how much data point $y_i$ influences its own prediction $\hat{y}_i$
+        \item $p_{ij}$ : how much data point $y_j$ influences the prediction of $\hat{y}_i$
+    \end{itemize}
+    
+    
+    \item residuals: $r = Y - \hat{Y}$: orth. proj. of $Y$ onto $\text{Col}(X)^\perp$
+    \item $r = QY, \quad Q = I - P, \quad \text{tr}(Q)=n-p$, \quad $QX=0$
+    \item $\underline{PQ = QP = 0} \implies r \perp \hat{Y}$ (always orthogonal, but only independent when gaussian errors)(via $QP=0$)
+    \item $\bar{r} = \frac{r^\top x^{(1)}}{n} = 0$ (true if a intercept exists) $\implies \widehat{\text{Cov}}(r, \hat{Y}) = 0$ (no remaining linear relationship between predictions and errors.)
+\end{itemize}
+
+\subsection{Statistical properties of LS estimator}
+$\epsilon$ is random $\implies \hat{\beta}=(X^\top X)^{-1}X^\top Y$ is random
+
+\subsubsection*{Assuming $\mathbb{E}[\epsilon]=0$}
+$\mathbb{E}[\hat{\beta}] = \beta$ (unbiased estimator), $\mathbb{E}[r] = 0$ \quad (where $r = \hat{\epsilon}$), $\mathbb{E}[\hat{Y}] = \mathbb{E}[X\hat{\beta}] = X\beta$
+
+\subsubsection*{Assuming $\text{Cov}(\epsilon)=\sigma^2 I_{n \times n}$}
+\begin{itemize}
+    \item $\text{Cov}(\hat{\beta}) = \text{Cov}((X^\top X)^{-1} X^\top Y) = A \text{Cov}(Y) A^\top = \sigma^2 A A^\top = \sigma^2 (X^\top X)^{-1}$ (with $(X^\top X)^{-1} X^\top =A$).
+    $\implies \text{Var}(\hat{\beta}_j)$ (measures the uncertainty of that estimate) $= \sigma^2(X^\top X)^{-1}_{jj} (=\frac{\sigma^2}{\sum_{i=1}^{n} (x_{ij} - \bar{x}_j)^2 (1 - R_j^2)} (x_j$ highly correlated with another variable $R_j^2 \approx 1$). Large if cols of X close to lin. dependent. Because $A^{-1} = \frac{1}{\det(A)}\text{adj}(A)$, if highly correlated $\implies \det \approx 0 \implies (X^\top X)^{-1}$ very large.
+    \item $\text{Cov}(\hat{Y}) = \sigma^2 P$
+    \item $\text{Cov}(r) = \sigma^2 Q \implies \text{Var}(\hat{\epsilon}_i) = \sigma^2(1-P_{ii})$. in contrast to $\text{Cov}(\epsilon)=\sigma^2 I$)
+    \item $\text{Cov}(\hat{Y}, \hat{\epsilon}) = 0$
+    \item $\mathbb{E}[\hat{\sigma}_{LS}^2] = \sigma^2$ (unbiased) with $\hat{\sigma}^2 = \frac{1}{n-p}\sum_{i=1}^n \hat{\epsilon}_i^2$ (General rule for variance estimator: divide a factor (often SSR) by ($n - \#\text{params}$)
+\end{itemize}
+
+\subsubsection*{MLE vs LS}
+Assump: $\epsilon \sim \mathcal{N}_n(0, \sigma^2 I_{n\times n}) \implies \hat{\beta}_{LS}{=}\hat{\beta}_{MLE}$.
+But $\hat{\sigma}_{MLE} = \frac{RSS}{n}$ (biased in finite samples)
+$\neq$ usual $\frac{RSS}{n-p}$ (unbiased, req. for t-/F-tests).
+
+\section{Tests and Confidence Intervals}
+\subsection*{Exact Normality of Errors}
+Assumption: $\varepsilon \sim \mathcal{N}_n(0, \sigma^2 I_{n \times n})$ and $\varepsilon_i$ i.i.d.
+\begin{itemize}
+    \item Implies $\hat{\beta} \sim \mathcal{N}_p(\beta, \sigma^2(X^\top X)^{-1}), \quad \hat{Y} \sim N_n(X\beta, \quad \sigma^2 P), \quad \hat{\varepsilon} \sim N_n(0, \sigma^2 Q), \quad \frac{\sum_{i=1}^n \hat{\varepsilon}_i^2}{\sigma^2} \sim \chi^2_{n-p} , \quad \hat{Y} \perp \hat{\varepsilon}, \quad \widehat{\sigma^2} \perp \widehat{\beta}$ (both are always orthogonal and here independent because gaussian errors)
+    \item Exact tests (for $j \in \{1,\dots,p\}$):
+    \begin{itemize}
+        \item If $\sigma^2$ known: $Z = \frac{\hat{\beta}_j - \beta_j}{\sigma \sqrt{(X^\top X)^{-1}_{jj}}} \sim \mathcal{N}(0,1)$.
+        \item If $\sigma^2$ unknown, use $\hat{\sigma}^2 = \frac{RSS}{n-p}$:
+        $T = \frac{\hat{\beta}_j - \beta_j}{\widehat{\text{s.e.}}(\hat{\beta}_j)} \sim t_{n-p}$
+        where $\widehat{\text{s.e.}}(\hat{\beta}_j) = \hat{\sigma} \sqrt{(X^\top X)^{-1}_{jj}}$.
+    \end{itemize}
+    \item Hypothesis Testing ($H_0: \beta_j = 0$ vs $H_A: \beta_j \neq 0$):
+    \\ Calculate $T = \hat{\beta}_j / \widehat{\text{s.e.}}(\hat{\beta}_j)$.
+    \\ Reject $H_0$ if $|T_{\text{realized}}| > t_{n-p, 1-\alpha/2}$.
+\end{itemize}
+
+
+In Software: Estimate $\hat{\beta}_j$; Std. Err: $\widehat{\text{s.e.}}(\hat{\beta}_j) = \hat{\sigma} \sqrt{(X^\top X)^{-1}_{jj}}$; t-value: $t_j = \frac{\hat{\beta}_j}{\widehat{\text{s.e.}}(\hat{\beta}_j)}$; $\text{Pr}(>|t|)$ is the two-sided p-value for $H_0: \beta_j = 0$, sample size(lm output): $n= df +p \text{ (including intercept)}$. Residual standard error: $\hat{\sigma}$
+
+\subsubsection*{F-Tests}
+Used for testing multiple coefficients simultaneously.
+\begin{itemize}
+    \item Global F-Test (No intercept. If intercept exists its just a case of the partial F-Test below: with $\text{dim}(S) = p-1$): Tests if \textit{any} predictor has effect.
+    $\frac{(\hat{\beta} - \beta)^\top (X^\top X) (\hat{\beta} - \beta)}{p \hat{\sigma}^2} \sim F_{p, n-p}$
+    Reject $H_0$ if realized $f > F_{p, n-p, 1-\alpha}$.
+    \item Partial F-Test: Let $S \subseteq \{1, \dots, p\}$.
+    \\ $H_0: \beta_j = 0, \forall j \in S$ vs $H_A: \exists j \in S \text{ s.t. } \beta_j \neq 0$.
+    \\ Note: Partial F-test with $|S|=1$ (single coef) is equivalent to the two-sided t-test ($F = t^2$).
+\end{itemize}
+
+\subsection*{Asymptotic Normality (CLT)}
+No Gaussian assumption of errors $\varepsilon_1, \dots, \varepsilon_n$.$ \leadsto t \text{ and } F \text{ distributions become } N(0, 1) \text{ and } \chi \text{ distributions}$. p-values and tests are only valid with normal errors. With non gaussian errors they are only asymptotically valid.
+
+
+\subsubsection*{Case 1: i.i.d Errors}
+$\varepsilon_i$ i.i.d, $\mathbb{E}[\varepsilon_i]=0, \text{Var}(\varepsilon_i)=\sigma^2 < \infty$.
+\\ Result: For large $n$, $\hat{\beta} \approx \mathcal{N}_p(\beta, \sigma^2(X^\top X)^{-1})$.
+\\ \textit{Rule of thumb:} Approx holds well if $n \ge 100$.
+
+\subsubsection*{Case 2: Independent, non-identical}
+$\varepsilon_i$ independent but not identically distributed. Lindeberg's CLT: We assume increasing $n$ always yields more info and there are no dominating terms. Result is the same approx normality as above.
+\begin{itemize}
+    \item Smallest eigenvalue of $X^\top X =: \lambda_{\min}^2(X^\top X)$: $\lambda_{\min}^2(X^\top X) \to \infty \quad (n \to \infty)$
+    that is: $\lambda_{\min}^2 (X^\top X/n) \gg 1/n$
+    \item $\max_{i=1,\dots,n} P_{ii} \to 0 \quad (n \to \infty)$
+\end{itemize}
+
+\subsubsection*{Robustness Note}
+CLT approximation can be very bad for small $n$ or heavy tails.
+\begin{itemize}
+    \item OLS is not good with outliers (Gaussian outliers are rare, but real data often has them).
+    \item For non-Gaussian errors with outliers, use "robust estimators".
+\end{itemize}
+
+
+\section{Comparison of Nested Models}
+Definitions:
+\begin{itemize}
+    \item Full Model: $Y = X\beta + \varepsilon$ ($p$ params). $SSE = \|Y - \hat{Y}\|_2^2$.
+    \item Sub Model ($H_0$): $\beta_1 = \dots = \beta_{p-q} = 0$ ($q$ params). \\
+    Implies predictors $X_{p-q+1}, \dots, X_p$ remain. $SSE_0 = \|Y - \hat{Y}^{(0)}\|_2^2$.
+\end{itemize}
+
+\subsection*{Geometric Interpretation}
+Important that rank(X) = p
+\begin{itemize}
+    \item $r = Y - \hat{Y}, \quad \|Y - \hat{Y}\|_2 = \sqrt{SSE}$
+    \item $Y - \hat{Y} \in \text{col}(X)^\perp$ = $(n-p)$-dim subspace
+    \item Under  $H_0$:
+    \begin{itemize}
+        \item $r^{(0)} = Y - \hat{Y}^{(0)}, \quad \|Y - \hat{Y}^{(0)}\|_2 = \sqrt{SSE_0}$
+        \item $Y - \hat{Y}^{(0)} \in \text{col}(X_{p-q+1}, \dots, X_p)^\perp$ = $(n-q)$-dim subspace
+        \item $\|\hat{Y} - \hat{Y}^{(0)}\|_2 = \sqrt{SSE_0 - SSE}$ (Pythagoras)
+        \item $\hat{Y} - \hat{Y}^{(0)} \in (p-q)$-dim subspace
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Expectations \& F-Test}
+Note:
+\begin{itemize}
+    \item Always: $\mathbb{E}[SSE] = (n-p)\sigma^2$
+    \item Under $H_0$: $\mathbb{E}[SSE_0] = (n-q)\sigma^2$
+    \item Under $H_0$: $\mathbb{E}[SSE_0 - SSE] = (p-q)\sigma^2$
+\end{itemize}
+
+Test Statistic:
+$F = \frac{(SSE_0 - SSE)/(p-q)}{SSE/(n-p)} \overset{H_0}{\sim} F_{p-q, n-p}$
+
+If $H_0$ is true, ratio $\approx 1$. If $H_A$ is true $> 1$ (test stat. holds because orthogonality of nom/denom).
+
+\subsection{Coeff. of Determination ($R^2$)}
+Let $H_0: \hat{\beta}_{(0)} = (\bar{y}, 0, \dots, 0)^\top$, $\hat{Y}^{(0)} = (\bar{y}, \dots, \bar{y})^\top =: \bar{Y} \in \mathbb{R}^{n \times 1}$. Here $SSE_0 = \|Y - \bar{Y}\|_2^2$.
+
+$R^2 := \frac{\|\hat{Y} - \bar{Y}\|^2}{\|Y - \bar{Y}\|^2} = 1 - \frac{\|Y - \hat{Y}\|_2^2}{\|Y - \bar{Y}\|_2^2} = 1- RSS/TSS \in [0, 1]$
+
+\begin{itemize}
+    \item ($0.6{-}0.8$ good)\\
+    \item Proportion of variance explained by model.
+    \item $(\text{empirical correlation between } \hat{Y} \text{ and } Y)^2$.
+\end{itemize}
+
+\section{Correlation for Simple Linear Regression}
+\subsection*{Correlation (Pearson)}
+Measures linear dependence between $X$ and $Y$.
+$\rho = \rho(X,Y) = \frac{\text{Cov}(X,Y)}{\sqrt{\text{Var}(X)\text{Var}(Y)}} \in [-1, 1]$
+
+Properties:
+\begin{itemize}
+    \item $|\rho|=1 \iff Y = a + bX$ for $a \in \mathbb{R}, b \neq 0$.
+    \item If $\rho=0$, $X$ and $Y$ are \textit{uncorrelated}.
+    \item Independence $\implies \rho=0$ (Converse true if Joint Gaussian).
+\end{itemize}
+Empirical Correlation ($\hat{\rho}$):
+$\hat{\rho} = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum (x_i-\bar{x})^2 \sum (y_i-\bar{y})^2}}$
+
+(measures linear dependence between data points $(X_i, Y_i) \ i=1,\dots,n$).
+
+Fisher z-transformation:
+Since $\hat{\rho}$ is bounded (variance small near $\pm 1$, large near $0$ (wall effect)), we transform to test $H_0: \rho = 0$ (or $\rho=\rho_0$):
+$Z := \tanh^{-1}(\widehat{\rho}) = \frac{1}{2} \log \left( \frac{1 + \widehat{\rho}}{1 - \widehat{\rho}} \right) \overset{\text{approx}}{\sim} \mathcal{N}\left(\tanh^{-1}(\rho), \frac{1}{n-3}\right)$
+
+Test for $H_0: \rho=0 \implies Z(\hat{\rho}) \approx \mathcal{N}(0, 1/(n-3))$.
+
+\subsection*{Rank Correlation (Non-linear)}
+Measures monotone dependence. Robust to outliers.
+\begin{itemize}
+    \item Spearman's: Pearson correlation of the \textit{ranks}.
+    \item Kendall's $\tau$:
+    $\tau = \frac{2(T_u - T_d)}{n(n-1)}$
+    
+    $T_u = \#$ concordant pairs $((x_i-x_j)(y_i-y_j)>0)$.
+    
+    $T_d = \#$ discordant pairs.
+\end{itemize}
+
+Both equal $\pm 1$ if and only if strictly monotone relation exists.
+
+\subsection*{Partial Correlation}
+Measures strength and direction of linear dependence between $X$ and $Y$ after accounting for linear dependence on $Z$.
+\begin{itemize}
+    \item Equivalent to correlation between residuals $R_X, R_Y$ after linearly regressing $X$ on $Z$ and $Y$ on $Z$ respectively.
+    \item Regression coefficients $\hat{\beta}_j$ are equal to partial correlations on a different scale.
+\end{itemize}
+
